@@ -1,25 +1,36 @@
 package org.sitenv.referenceccda.controllers;
 
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletResponse;
+
 import org.sitenv.referenceccda.dto.ValidationResultsDto;
 import org.sitenv.referenceccda.services.ReferenceCCDAValidationService;
 import org.sitenv.referenceccda.services.VocabularyService;
+import org.sitenv.referenceccda.validators.schema.OCLLoader;
 import org.sitenv.vocabularies.validation.entities.Code;
 import org.sitenv.vocabularies.validation.entities.VsacValueSet;
 import org.sitenv.vocabularies.validation.services.VocabularyValidationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.util.FileCopyUtils;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.*;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 @RestController
 public class ReferenceCCDAValidationController {
+
 	@Autowired
 	ReferenceCCDAValidationService referenceCcdaValidationService;
 	@Autowired
@@ -33,10 +44,14 @@ public class ReferenceCCDAValidationController {
 	public ValidationResultsDto doValidation(
 			@RequestParam(value = "validationObjective", required = true) String validationObjective,
 			@RequestParam(value = "referenceFileName", required = true) String referenceFileName,
-			@RequestParam(value = "ccdaFile", required = true) MultipartFile ccdaFile) {
-		return referenceCcdaValidationService.validateCCDA(validationObjective, referenceFileName, ccdaFile);
+			@RequestParam(value = "ccdaFile", required = true) MultipartFile ccdaFile,
+			@RequestParam(value = "severityLevel", required = false, defaultValue = "info") String severityLevel) {
+		if (severityLevel==null || severityLevel.equals("")) {
+			severityLevel="info";
+		}
+		return referenceCcdaValidationService.validateCCDA(validationObjective, referenceFileName, ccdaFile, severityLevel);
 	}
-
+	
 	@RequestMapping(value = "/getvaluesetsbyoids", method = RequestMethod.GET)
 	public List<VsacValueSet> getValuesetsByOids(@RequestParam(value = "oids", required = true) String[] valuesetOids){
 		return vocabularyService.getValuesetsByOids(Arrays.asList(valuesetOids));
@@ -72,11 +87,71 @@ public class ReferenceCCDAValidationController {
         InputStream inputStream = new BufferedInputStream(new FileInputStream(fileToDownload));
         FileCopyUtils.copy(inputStream, httpServletResponse.getOutputStream());
     }
-
+    
 	@Cacheable("messagetypeValidationObjectivesAndReferenceFilesMap")
 	@RequestMapping(value = "/senderreceivervalidationobjectivesandreferencefiles", method = RequestMethod.GET)
 	public Map<String, Map<String, List<String>>> getMapOfSenderAndRecieverValidationObjectivesWithReferenceFiles(){
 		return vocabularyService.getMapOfSenderAndRecieverValidationObjectivesWithReferenceFiles();
 	}
 
+	/*       
+     * 	Following Method is added to support CCDA validation on file reference.
+     *  ccdaReferenceFileName parameter will the file reference path to the CCDA file cache. 
+     *  The file cache must be shared and accessible to the service.   
+     */
+    //------------------------- INTERNAL CODE CHANGE  START --------------------------
+    
+    @RequestMapping(value = "/validatedocument", method = RequestMethod.GET)
+	public ValidationResultsDto doValidation(
+			@RequestParam(value = "validationObjective", required = false) String validationObjective,
+			@RequestParam(value = "referenceFileName", required = false) String referenceFileName,
+			@RequestParam(value = "ccdaReferenceFileName", required = true) String ccdaFileReference) {
+		return referenceCcdaValidationService.validateCCDA(validationObjective, referenceFileName, ccdaFileReference, "info");
+	}
+    
+	/*       
+     * 	Following method is another flavor to validate a CDA document by file.
+     *  Additional parameter severityLevel is passed to filter the results based on the severity. 
+     */
+	@RequestMapping(value = "/validateDocumentByFile", headers = "content-type=multipart/*", method = RequestMethod.POST)
+	public ValidationResultsDto doValidation(
+			@RequestParam(value = "validationObjective", required = true) String validationObjective,
+			@RequestParam(value = "referenceFileName", required = true) String referenceFileName,
+			@RequestParam(value = "ccdaFile", required = true) MultipartFile ccdaFile,
+			@RequestParam(value = "severityLevel", required = true, defaultValue = "Error") String severityLevel,
+			@RequestParam(value = "performMDHTValidation", required = false, defaultValue = "true") boolean performMDHTValidation,
+			@RequestParam(value = "performVocabularyValidation", required = false, defaultValue = "true") boolean performVocabularyValidation,
+			@RequestParam(value = "performContentValidation", required = false, defaultValue = "false") boolean performContentValidation
+			) {
+		
+		return referenceCcdaValidationService.validateCCDA(validationObjective, referenceFileName, ccdaFile,severityLevel.toUpperCase(), performMDHTValidation, performVocabularyValidation, performContentValidation);
+	}
+    
+	/*       
+     * 	Following method is another flavor to validate a CDA document by file. 
+     *  It's without OAuth for easy soapUI load testing.
+     *  
+     *  Additional parameter severityLevel is passed to filter the results based on the severity. 
+     */
+	@RequestMapping(value = "/validateDocumentByFile_NoOAuth", headers = "content-type=multipart/*", method = RequestMethod.POST)
+	public ValidationResultsDto doValidation_NoOAuth(
+			@RequestParam(value = "validationObjective", required = true) String validationObjective,
+			@RequestParam(value = "referenceFileName", required = true) String referenceFileName,
+			@RequestParam(value = "ccdaFile", required = true) MultipartFile ccdaFile,
+			@RequestParam(value = "severityLevel", required = true, defaultValue = "Error") String severityLevel,
+			@RequestParam(value = "performMDHTValidation", required = false, defaultValue = "true") boolean performMDHTValidation,
+			@RequestParam(value = "performVocabularyValidation", required = false, defaultValue = "true") boolean performVocabularyValidation,
+			@RequestParam(value = "performContentValidation", required = false, defaultValue = "false") boolean performContentValidation
+			) {				
+		return referenceCcdaValidationService.validateCCDA(validationObjective, referenceFileName, ccdaFile,severityLevel.toUpperCase(), performMDHTValidation, performVocabularyValidation, performContentValidation);
+	}
+
+	@RequestMapping(value = "/initOCL", method = RequestMethod.GET)
+	public Map<String,String> doIniOCL() {
+		
+		return  OCLLoader.loadocl();
+	}
+    
+//------------------------- INTERNAL CODE CHANGE  END --------------------------
+    
 }

@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.sitenv</groupId>
-    <artifactId>referenceccdavalidator</artifactId>
+    <artifactId>cerner-referenceccdavalidator</artifactId>
     <version>1.0.11</version>
     <packaging>war</packaging>
     <name>Reference CCDA Validator</name>
@@ -15,24 +15,22 @@
     </properties>
 
     <repositories>
-        <!--<repository>
-            <id>mdht-vocab-repo</id>
-            <url>file://${project.basedir}/mdht-vocab-repo</url>
-        </repository>-->
-        <repository>
+         <repository>
             <snapshots>
                 <enabled>false</enabled>
             </snapshots>
-            <id>central</id>
+            <id>mdht-libs</id>
             <name>libs-release</name>
             <url>http://devsoap.sitenv.org:8081/artifactory/libs-release</url>
         </repository>
         <repository>
-            <snapshots />
-            <id>snapshots</id>
-            <name>libs-snapshot</name>
-            <url>http://devsoap.sitenv.org:8081/artifactory/libs-snapshot</url>
-        </repository>        
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>        
+            <id>mdht-plugins</id>
+            <name>plugins-release</name>
+            <url>http://devsoap.sitenv.org:8081/artifactory/plugins-release-local</url>
+        </repository> 
     </repositories>
 
     <dependencies>
@@ -41,38 +39,38 @@
 		<dependency>
 		    <groupId>org.openhealthtools.mdht.cda</groupId>
 		    <artifactId>org.openhealthtools.mdht.uml.cda.consol2</artifactId>
-		    <version>2.6.0.20161229</version>
+		    <version>2.6.3.20170323</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.openhealthtools.mdht.cda</groupId>
 		    <artifactId>org.openhealthtools.mdht.uml.cda.mu2consol</artifactId>
-		    <version>2.6.0.20161229</version>
+		    <version>2.6.3.20170323</version>
 		</dependency>
 		<!-- 1st party MDHT - PLUGINS from http://git.eclipse.org/c/mdht/org.eclipse.mdht.git -->
 		<dependency>
 		    <groupId>org.eclipse.mdht</groupId>
 		    <artifactId>org.eclipse.mdht.emf.runtime</artifactId>
-		    <version>3.0.0-20170103.233449-2</version>
+		    <version>3.0.0.201703230502</version>
 		</dependency>
-		<dependency>
-		    <groupId>org.eclipse.mdht</groupId>
-		    <artifactId>org.eclipse.mdht.uml.cda</artifactId>
-		    <version>3.0.0-20170103.234048-3</version>
-		</dependency>
+        <dependency>
+            <groupId>org.eclipse.mdht</groupId>
+            <artifactId>org.eclipse.mdht.uml.cda</artifactId>
+            <version>3.0.0.201703230502</version>
+        </dependency>
 		<dependency>
 		    <groupId>org.eclipse.mdht</groupId>
 		    <artifactId>org.eclipse.mdht.uml.hl7.datatypes</artifactId>
-		    <version>3.0.0-20170103.234136-3</version>
+		    <version>3.0.0.201703230502</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.eclipse.mdht</groupId>
 		    <artifactId>org.eclipse.mdht.uml.hl7.rim</artifactId>
-		    <version>3.0.0-20170103.234147-3</version>
+		    <version>3.0.0.201703230502</version>
 		</dependency>
 		<dependency>
 		    <groupId>org.eclipse.mdht</groupId>
 		    <artifactId>org.eclipse.mdht.uml.hl7.vocab</artifactId>
-		    <version>3.0.0-20170103.234157-3</version>
+		    <version>3.0.0.201703230502</version>
 		</dependency>	
 		<!-- 3rd party MDHT -->
 		<dependency>
@@ -125,8 +123,8 @@
         <!-- START VOCAB DEPENDENCIES -->
         <dependency>
             <groupId>org.sitenv.vocabulary</groupId>
-            <artifactId>codevalidator-api</artifactId>
-            <version>1.0.5</version>
+            <artifactId>cerner-codevalidator-api</artifactId>
+            <version>1.0.6-SNAPSHOT</version>
         </dependency>
         <!-- END VOCAB DEPENDENCIES -->
 
@@ -186,7 +184,7 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>3.8.1</version>
+            <version>4.12</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -405,6 +403,7 @@
             <!-- This profile will build a zip file of the war and all of the necessary artifacts to deploy the validator. -->
             <id>distribution</id>
             <build>
+            	<finalName>cerner-referencevalidator-${version}</finalName>
                 <plugins>
                     <plugin>
                         <artifactId>maven-assembly-plugin</artifactId>

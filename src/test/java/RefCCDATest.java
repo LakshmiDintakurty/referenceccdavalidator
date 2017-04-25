@@ -472,7 +472,7 @@ public class RefCCDATest {
 					+ (referenceCcdaValidationService == null ? "null" : "not null")
 					+ ("mockSample is " + mockSample == null ? "null" : "not null"));
 		}
-		return referenceCcdaValidationService.validateCCDA(validationObjective, "", mockSample);
+		return referenceCcdaValidationService.validateCCDA(validationObjective, "", mockSample, "info");
 	}
 
 	private static ArrayList<RefCCDAValidationResult> validateDocumentAndReturnResults(String ccdaFileAsString) {
@@ -485,7 +485,7 @@ public class RefCCDATest {
 		ArrayList<RefCCDAValidationResult> results = null;
 		try {
 			results = referenceCCDAValidator.validateFile(validationObjective, "Test",
-					ccdaFileAsString);
+					ccdaFileAsString, "info");
 		} catch (SAXException e) {
 			if(LOG_RESULTS_TO_CONSOLE) e.printStackTrace();
 		} catch (Exception e) {
