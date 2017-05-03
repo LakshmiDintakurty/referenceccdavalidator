@@ -434,6 +434,19 @@
                            <packagingExcludes>**/context.xml</packagingExcludes>
                         </configuration>
                     </plugin>
+                    
+                    <!--  Need to exclude since Cerner Custom initializer is being used-->
+                    <plugin>
+					      <groupId>org.apache.maven.plugins</groupId>
+					      <artifactId>maven-compiler-plugin</artifactId>
+					      <configuration>
+					        <excludes>
+					          <exclude>org/sitenv/referenceccda/configuration/ApplicationInitializer.java</exclude>
+					        </excludes>
+					      </configuration>
+					</plugin>
+                    <!--  Need to exclude since Cerner Custom initializer is being used-->
+                    
                 </plugins>
             </build>
         </profile>
