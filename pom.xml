@@ -309,7 +309,6 @@
                     <allowSnapshots>true</allowSnapshots>
                 </configuration>
             </plugin>
-            
             <!-- START : Need to exclude ApplicationInitializer since using Cerner specific Custom initializer in a separate project -->
 			<plugin>
 			      <groupId>org.apache.maven.plugins</groupId>
@@ -321,7 +320,6 @@
 			      </configuration>
 			</plugin>
 			<!--  END : Need to exclude ApplicationInitializer since using Cerner specific Custom initializer in a separate project-->
-            
             <plugin>
                 <groupId>org.apache.tomcat.maven</groupId>
                 <artifactId>tomcat7-maven-plugin</artifactId>
