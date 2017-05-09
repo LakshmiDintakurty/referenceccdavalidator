@@ -309,6 +309,19 @@
                     <allowSnapshots>true</allowSnapshots>
                 </configuration>
             </plugin>
+            
+            <!-- START : Need to exclude ApplicationInitializer since using Cerner specific Custom initializer in a separate project -->
+			<plugin>
+			      <groupId>org.apache.maven.plugins</groupId>
+			      <artifactId>maven-compiler-plugin</artifactId>
+			      <configuration>
+			        <excludes>
+			          <exclude>org/sitenv/referenceccda/configuration/ApplicationInitializer.java</exclude>
+			        </excludes>
+			      </configuration>
+			</plugin>
+			<!--  END : Need to exclude ApplicationInitializer since using Cerner specific Custom initializer in a separate project-->
+            
             <plugin>
                 <groupId>org.apache.tomcat.maven</groupId>
                 <artifactId>tomcat7-maven-plugin</artifactId>
@@ -434,19 +447,6 @@
                            <packagingExcludes>**/context.xml</packagingExcludes>
                         </configuration>
                     </plugin>
-                    
-                    <!--  Need to exclude since Cerner Custom initializer is being used-->
-                    <plugin>
-					      <groupId>org.apache.maven.plugins</groupId>
-					      <artifactId>maven-compiler-plugin</artifactId>
-					      <configuration>
-					        <excludes>
-					          <exclude>org/sitenv/referenceccda/configuration/ApplicationInitializer.java</exclude>
-					        </excludes>
-					      </configuration>
-					</plugin>
-                    <!--  Need to exclude since Cerner Custom initializer is being used-->
-                    
                 </plugins>
             </build>
         </profile>
