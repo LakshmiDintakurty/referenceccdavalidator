@@ -3,7 +3,7 @@
 
     <groupId>org.sitenv</groupId>
     <artifactId>cerner-referenceccdavalidator</artifactId>
-    <version>1.0.11</version>
+    <version>1.0.11-SNAPSHOT</version>
     <!--   
 	    <packaging>war</packaging>
     -->
