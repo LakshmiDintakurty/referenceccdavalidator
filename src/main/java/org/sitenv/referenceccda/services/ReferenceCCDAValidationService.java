@@ -398,15 +398,18 @@ public class ReferenceCCDAValidationService {
 				}
 			}
 			
-			if (performVocabularyValidation && objectiveAllowsContentValidation(validationObjective)) {
+			if (performVocabularyValidation || objectiveAllowsContentValidation(validationObjective)) {
 
 				startTime = System.currentTimeMillis();
-				
-                List<RefCCDAValidationResult> vocabResults = doVocabularyValidation(validationObjective, referenceFileName, ccdaFileContents, severityLevel);
-            	if(vocabResults != null && !vocabResults.isEmpty()) {
-            		logger.info("Adding Vocabulary results");
-            		validatorResults.addAll(vocabResults);
-            	}
+                
+                if (performVocabularyValidation) {
+                	List<RefCCDAValidationResult> vocabResults = doVocabularyValidation(validationObjective, referenceFileName, ccdaFileContents, severityLevel);
+               
+	            	if(vocabResults != null && !vocabResults.isEmpty()) {
+	            		logger.info("Adding Vocabulary results");
+	            		validatorResults.addAll(vocabResults);
+	            	}
+                }
 					
 				stopTime = System.currentTimeMillis();
 				out.append(" Vocab:" + (stopTime - startTime) + " ms, " );
