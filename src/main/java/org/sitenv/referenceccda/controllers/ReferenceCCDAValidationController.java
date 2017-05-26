@@ -27,6 +27,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.sitenv.referenceccda.validators.schema.CCDATypes;
+import org.sitenv.referenceccda.validators.schema.ValidationObjectives;
 
 @RestController
 public class ReferenceCCDAValidationController {
@@ -101,14 +103,6 @@ public class ReferenceCCDAValidationController {
      */
     //------------------------- INTERNAL CODE CHANGE  START --------------------------
     
-    @RequestMapping(value = "/validatedocument", method = RequestMethod.GET)
-	public ValidationResultsDto doValidation(
-			@RequestParam(value = "validationObjective", required = false) String validationObjective,
-			@RequestParam(value = "referenceFileName", required = false) String referenceFileName,
-			@RequestParam(value = "ccdaReferenceFileName", required = true) String ccdaFileReference) {
-		return referenceCcdaValidationService.validateCCDA(validationObjective, referenceFileName, ccdaFileReference, "info");
-	}
-    
 	/*       
      * 	Following method is another flavor to validate a CDA document by file.
      *  Additional parameter severityLevel is passed to filter the results based on the severity. 
@@ -121,10 +115,13 @@ public class ReferenceCCDAValidationController {
 			@RequestParam(value = "severityLevel", required = true, defaultValue = "Error") String severityLevel,
 			@RequestParam(value = "performMDHTValidation", required = false, defaultValue = "true") boolean performMDHTValidation,
 			@RequestParam(value = "performVocabularyValidation", required = false, defaultValue = "true") boolean performVocabularyValidation,
-			@RequestParam(value = "performContentValidation", required = false, defaultValue = "false") boolean performContentValidation
+			@RequestParam(value = "performContentValidation", required = false, defaultValue = "false") boolean performContentValidation,
+			@RequestParam(value = "defaultR21ValidationObjective", required = false, defaultValue = ValidationObjectives.Receiver.B1_TOC_INP_170_315) String defaultR21ValidationObjective,
+			@RequestParam(value = "defaultR11ValidationObjective", required = false, defaultValue = CCDATypes.NON_SPECIFIC_CCDAR2) String defaultR11ValidationObjective
 			) {
 		
-		return referenceCcdaValidationService.validateCCDA(validationObjective, referenceFileName, ccdaFile,severityLevel.toUpperCase(), performMDHTValidation, performVocabularyValidation, performContentValidation);
+		return referenceCcdaValidationService.validateCCDA(validationObjective, referenceFileName, ccdaFile,severityLevel.toUpperCase(), 
+				performMDHTValidation, performVocabularyValidation, performContentValidation, defaultR21ValidationObjective, defaultR11ValidationObjective);
 	}
     
 	/*       
@@ -141,9 +138,12 @@ public class ReferenceCCDAValidationController {
 			@RequestParam(value = "severityLevel", required = true, defaultValue = "Error") String severityLevel,
 			@RequestParam(value = "performMDHTValidation", required = false, defaultValue = "true") boolean performMDHTValidation,
 			@RequestParam(value = "performVocabularyValidation", required = false, defaultValue = "true") boolean performVocabularyValidation,
-			@RequestParam(value = "performContentValidation", required = false, defaultValue = "false") boolean performContentValidation
+			@RequestParam(value = "performContentValidation", required = false, defaultValue = "false") boolean performContentValidation,
+			@RequestParam(value = "defaultR21ValidationObjective", required = false, defaultValue = ValidationObjectives.Receiver.B1_TOC_INP_170_315) String defaultR21ValidationObjective,
+			@RequestParam(value = "defaultR11ValidationObjective", required = false, defaultValue = CCDATypes.NON_SPECIFIC_CCDAR2) String defaultR11ValidationObjective
 			) {				
-		return referenceCcdaValidationService.validateCCDA(validationObjective, referenceFileName, ccdaFile,severityLevel.toUpperCase(), performMDHTValidation, performVocabularyValidation, performContentValidation);
+		return referenceCcdaValidationService.validateCCDA(validationObjective, referenceFileName, ccdaFile,severityLevel.toUpperCase(), 
+				performMDHTValidation, performVocabularyValidation, performContentValidation, defaultR21ValidationObjective, defaultR11ValidationObjective);
 	}
 
 	@RequestMapping(value = "/initOCL", method = RequestMethod.GET)

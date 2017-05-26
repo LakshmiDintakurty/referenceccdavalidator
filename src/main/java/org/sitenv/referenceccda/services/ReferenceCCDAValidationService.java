@@ -9,7 +9,15 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.zip.ZipInputStream;
 
+import javax.annotation.Resource;
+import javax.xml.namespace.NamespaceContext;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.BOMInputStream;
@@ -26,10 +34,12 @@ import org.sitenv.referenceccda.validators.schema.CCDATypes;
 import org.sitenv.referenceccda.validators.schema.ReferenceCCDAValidator;
 import org.sitenv.referenceccda.validators.schema.ValidationObjectives;
 import org.sitenv.referenceccda.validators.vocabulary.VocabularyCCDAValidator;
+import org.sitenv.vocabularies.validation.utils.CCDADocumentNamespaces;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.w3c.dom.Document;
 import org.xml.sax.SAXException;
 
 @Service
@@ -50,6 +60,16 @@ public class ReferenceCCDAValidationService {
 	private static final String ERROR_SAX_PARSE_EXCEPTION = ERROR_PARSING_PREFIX
 			+ "Please verify the document does not contain in-line XSL styling and/or address " + ERROR_FOLLOWING_ERROR_POSTFIX;
 	private static final String ERROR_GENERIC_EXCEPTION = ERROR_GENERAL_PREFIX + ERROR_FOLLOWING_ERROR_POSTFIX;
+	
+	@Resource(name = "documentBuilderFactory")
+	DocumentBuilderFactory documentBuilderFactory;
+	
+	@Resource(name = "xPathFactory")
+	XPathFactory xPathFactory;
+
+	private DocumentBuilder getDocumentBuilder() throws ParserConfigurationException {
+		return documentBuilderFactory.newDocumentBuilder();
+	}	
 
     @Autowired
     public ReferenceCCDAValidationService(ReferenceCCDAValidator referenceCCDAValidator, VocabularyCCDAValidator vocabularyCCDAValidator, 
@@ -58,15 +78,22 @@ public class ReferenceCCDAValidationService {
         this.vocabularyCCDAValidator = vocabularyCCDAValidator;
         this.goldMatchingValidator = goldValidator;
     }
+    
+    public ValidationResultsDto validateCCDA(String validationObjective, String referenceFileName, 
+			MultipartFile ccdaFile, String severityLevel) {
+    	return validateCCDA(validationObjective, referenceFileName, ccdaFile, severityLevel, true, null, null);
+    }
 
 	public ValidationResultsDto validateCCDA(String validationObjective, String referenceFileName, 
-			MultipartFile ccdaFile, String severityLevel) {
+			MultipartFile ccdaFile, String severityLevel, boolean performContentValidation, 
+			String defaultR21ValidationObjective, String defaultR11ValidationObjective) {
 		ValidationResultsDto resultsDto = new ValidationResultsDto();
 		ValidationResultsMetaData resultsMetaData = new ValidationResultsMetaData();
 		List<RefCCDAValidationResult> validatorResults = new ArrayList<>();
 		
 		try {
-			validatorResults = runValidators(validationObjective, referenceFileName, ccdaFile, severityLevel);
+			validatorResults = runValidators(validationObjective, referenceFileName, ccdaFile, severityLevel,
+					performContentValidation, defaultR21ValidationObjective, defaultR11ValidationObjective);
 			resultsMetaData = buildValidationMedata(validatorResults, validationObjective);
 			resultsMetaData.setCcdaFileName(ccdaFile.getName());
 			resultsMetaData.setCcdaFileContents(new String(ccdaFile.getBytes()));
@@ -99,6 +126,33 @@ public class ReferenceCCDAValidationService {
 		return resultsDto;
 	}
 
+	protected XPath getNewXpath(final Document doc) {
+		XPath xpath = xPathFactory.newXPath();
+		xpath.setNamespaceContext(new NamespaceContext() {
+			@Override
+			public String getNamespaceURI(String prefix) {
+				String nameSpace;
+				if (CCDADocumentNamespaces.sdtc.name().equals(prefix)) {
+					nameSpace = CCDADocumentNamespaces.sdtc.getNamespace();
+				} else {
+					nameSpace = CCDADocumentNamespaces.defaultNameSpaceForCcda.getNamespace();
+				}
+				return nameSpace;
+			}
+
+			@Override
+			public String getPrefix(String namespaceURI) {
+				return null;
+			}
+
+			@Override
+			public Iterator getPrefixes(String namespaceURI) {
+				return null;
+			}
+		});
+		return xpath;
+	}	
+	
 	private static void processValidateCCDAException(ValidationResultsMetaData resultsMetaData, 
 			String serviceErrorStart, String validationObjective, Exception exception) {
 		resultsMetaData.setServiceError(true);
@@ -115,14 +169,19 @@ public class ReferenceCCDAValidationService {
 	}
 	
 	private List<RefCCDAValidationResult> runValidators(String validationObjective, String referenceFileName,
-			MultipartFile ccdaFile, String severityLevel) throws SAXException, Exception {
+			MultipartFile ccdaFile, String severityLevel, boolean performContentValidation, 
+			String defaultR21ValidationObjective, String defaultR11ValidationObjective) 
+					throws SAXException, Exception {
 		
 		List<RefCCDAValidationResult> validatorResults = new ArrayList<>();
 		InputStream ccdaFileInputStream = null;
 		try {
-            ccdaFileInputStream = ccdaFile.getInputStream();
-			String ccdaFileContents = IOUtils.toString(new BOMInputStream(ccdaFile.getInputStream()));
-
+			ccdaFileInputStream = ccdaFile.getInputStream();
+			String ccdaFileContents = IOUtils.toString(new BOMInputStream(ccdaFileInputStream));
+			
+			validationObjective = defaultValidationObjectiveIfEmpty(validationObjective, defaultR21ValidationObjective,
+					defaultR11ValidationObjective, ccdaFileContents);
+			
 			List<RefCCDAValidationResult> mdhtResults = doMDHTValidation(validationObjective, referenceFileName, ccdaFileContents, severityLevel);
 			if (mdhtResults != null && !mdhtResults.isEmpty()) {
             	logger.info("Adding MDHT results");
@@ -141,8 +200,9 @@ public class ReferenceCCDAValidationService {
                 logger.info("Adding Vocabulary results");
 				validatorResults.addAll(vocabResults);
 			}
-					
-        	if(objectiveAllowsContentValidation(validationObjective)) {
+			
+			// ETT TODO? Pass defaultValidationObjective to doContentValidation(...)
+        	if(performContentValidation && objectiveAllowsContentValidation(validationObjective)) {
 				List<RefCCDAValidationResult> contentResults = doContentValidation(validationObjective, referenceFileName, ccdaFileContents, severityLevel);
 	        	if (contentResults != null && !contentResults.isEmpty()) {
 		            		logger.info("Adding Content results");
@@ -154,11 +214,60 @@ public class ReferenceCCDAValidationService {
             			+ ") is not relevant or valid for Content validation");        		
         	}
 		} catch (IOException e) {
+			logger.error("runValidators failed: " + e);
 			throw new RuntimeException("Error getting CCDA contents from provided file", e);
 		} finally {
-			closeFileInputStream(ccdaFileInputStream);
+			if(ccdaFileInputStream != null) {
+				closeFileInputStream(ccdaFileInputStream);
+			}
 		}
 		return validatorResults;
+	}
+
+	private String defaultValidationObjectiveIfEmpty(String validationObjective, String defaultR21ValidationObjective,
+			String defaultR11ValidationObjective, String ccdaFileContents)
+			throws IOException, SAXException, ParserConfigurationException, XPathExpressionException {
+		InputStream inputStream = IOUtils.toInputStream(ccdaFileContents, "UTF-8");
+		
+		Document doc = getDocumentBuilder().parse(inputStream);
+		
+		XPath xpath = getNewXpath(doc);			
+		boolean isR11Doc = isDocumentR11CCDA(doc, xpath);			
+		
+		if(StringUtils.isEmpty(validationObjective) && (!StringUtils.isEmpty(defaultR11ValidationObjective) 
+				|| !StringUtils.isEmpty(defaultR21ValidationObjective))) {
+			
+			validationObjective = isR11Doc ? defaultR11ValidationObjective : defaultR21ValidationObjective;
+			
+			logger.debug("defaultR21ValidationObjective = " + defaultR21ValidationObjective);
+			logger.debug("defaultR11ValidationObjective = " + defaultR11ValidationObjective);
+						
+			StringBuilder msg = new StringBuilder("The validationObjective given is ");
+			msg.append(validationObjective == null ? "null" : "empty");
+			msg.append(", isR11Doc = ");
+			msg.append(isR11Doc);
+			msg.append(", setting validationObjective to ");
+			msg.append(validationObjective);
+			logger.warn(msg.toString());
+		}
+		
+		logger.debug("validationObjective = " + validationObjective);
+		return validationObjective;
+	}
+
+	private boolean isDocumentR11CCDA(Document doc, XPath xpath) throws XPathExpressionException {
+		boolean isR11CCDA = false;
+		Number num = (Number) xpath
+				.compile("count(/v3:ClinicalDocument/v3:templateId[@root='2.16.840.1.113883.10.20.22.1.1']/@extension)")
+				.evaluate(doc, XPathConstants.NUMBER);
+
+		if (num.intValue() == 0) {// MU2 CCDA R1.1 document
+			logger.debug("Validating an MU2 CCDA R1.1 document");
+			isR11CCDA = true;
+		} else {
+			logger.debug("Validating an MU3 CCDA R2.1 document");
+		}
+		return isR11CCDA;
 	}
 
 	private boolean mdhtResultsHaveSchemaError(List<RefCCDAValidationResult> mdhtResults) {
@@ -182,17 +291,18 @@ public class ReferenceCCDAValidationService {
 	}
 
 	private List<RefCCDAValidationResult> doMDHTValidation(String validationObjective, String referenceFileName,
-			String ccdaFileContents, String severityLevel) throws SAXException, Exception {
+			String ccdaFileContents, String severityLevel) 
+					throws SAXException, Exception {
 		logger.info("Attempting MDHT validation...");
 		return referenceCCDAValidator.validateFile(validationObjective, referenceFileName, ccdaFileContents, severityLevel);
 	}
 
 	private ArrayList<RefCCDAValidationResult> doVocabularyValidation(String validationObjective,
-			String referenceFileName, String ccdaFileContents, String severityLevel) throws SAXException, ParserConfigurationException {
+			String referenceFileName, String ccdaFileContents, String severityLevel) 
+					throws SAXException, ParserConfigurationException {
     	logger.info("Attempting Vocabulary validation...");
     	return vocabularyCCDAValidator.validateFile(validationObjective, referenceFileName, ccdaFileContents, severityLevel);
 	}
-
 
     private List<RefCCDAValidationResult> doContentValidation(String validationObjective, String referenceFileName, String ccdaFileContents,
     		String severityLevel) throws SAXException {
@@ -230,7 +340,8 @@ public class ReferenceCCDAValidationService {
 	// --------------------------
 
 	public ValidationResultsDto validateCCDA(String validationObjective, String referenceFileName,
-			String ccdaReferenceFileName, String severityLevel) {
+			String ccdaReferenceFileName, String severityLevel, boolean performContentValidation,
+			String defaultR21ValidationObjective, String defaultR11ValidationObjective) {
 
 		MockMultipartFile multipartFile;
 		try {
@@ -258,7 +369,8 @@ public class ReferenceCCDAValidationService {
 		} catch (Exception e) {
 			throw new RuntimeException("Error getting CCDA contents from provided file", e);
 		}
-		return validateCCDA(validationObjective, referenceFileName, multipartFile, severityLevel);
+		return validateCCDA(validationObjective, referenceFileName, multipartFile, severityLevel, 
+				performContentValidation, defaultR21ValidationObjective, defaultR11ValidationObjective);
 	}
 	
 	/*
@@ -268,7 +380,7 @@ public class ReferenceCCDAValidationService {
 	 */
 	public ValidationResultsDto validateCCDA(String validationObjective, String referenceFileName,
 			MultipartFile ccdaFile, String severityLevel, boolean performMDHTValidation, boolean performVocabularyValidation,
-			boolean performContentValidation) {
+			boolean performContentValidation, String defaultR21ValidationObjective, String defaultR11ValidationObjective) {
 
 		ValidationResultsDto resultsDto = new ValidationResultsDto();
 		
@@ -281,7 +393,9 @@ public class ReferenceCCDAValidationService {
 		try {		    
 			long startTime = System.currentTimeMillis();
 			
-			validatorResults = runValidators(validationObjective, referenceFileName, ccdaFile, severityLevel, performMDHTValidation, performVocabularyValidation, performContentValidation, out);
+			validatorResults = runValidators(validationObjective, referenceFileName, ccdaFile, severityLevel, 
+					performMDHTValidation, performVocabularyValidation, performContentValidation, out, 
+					defaultR21ValidationObjective, defaultR11ValidationObjective);
 
 			long stopTime = System.currentTimeMillis();
 			
@@ -354,7 +468,7 @@ public class ReferenceCCDAValidationService {
 	
 	private List<RefCCDAValidationResult> runValidators(String validationObjective, String referenceFileName,
 			MultipartFile ccdaFile, String severityLevel,boolean performMDHTValidation, boolean performVocabularyValidation,
-			boolean performContentValidation, StringBuilder out) throws SAXException {
+			boolean performContentValidation, StringBuilder out, String defaultR21ValidationObjective, String defaultR11ValidationObjective) throws SAXException {
 		
 		List<RefCCDAValidationResult> validatorResults = new ArrayList<>();
 		List<RefCCDAValidationResult> filterResults = new ArrayList<RefCCDAValidationResult>();
@@ -366,7 +480,7 @@ public class ReferenceCCDAValidationService {
 			if (ccdaFile.getOriginalFilename().toLowerCase().endsWith(".zip")) {
 				 ZipInputStream zis = new ZipInputStream(ccdaFile.getInputStream());
 				 while (zis.getNextEntry() != null && ccdaFileContents.length()==0) {
-					ccdaFileContents = IOUtils.toString(new BOMInputStream(new ZippedFileInputStream(zis)));
+					 ccdaFileContents = IOUtils.toString(new BOMInputStream(new ZippedFileInputStream(zis)));
 				 }
 			} else {
 				ccdaFileContents = IOUtils.toString(new BOMInputStream(ccdaFile.getInputStream()));
@@ -375,6 +489,9 @@ public class ReferenceCCDAValidationService {
 			long stopTime = System.currentTimeMillis();
 			
 			out.append(" DoctoString:" + (stopTime - startTime) + " ms, ");
+			
+			validationObjective = defaultValidationObjectiveIfEmpty(validationObjective, defaultR21ValidationObjective,
+					defaultR11ValidationObjective, ccdaFileContents);
 							
             boolean isObjectiveAllowingVocabularyValidation = objectiveAllowsVocabularyValidation(validationObjective);
             boolean isSchemaErrorInMdhtResults = false;
