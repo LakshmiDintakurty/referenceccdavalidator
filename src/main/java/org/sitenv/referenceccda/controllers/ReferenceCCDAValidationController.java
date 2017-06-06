@@ -116,7 +116,7 @@ public class ReferenceCCDAValidationController {
 			@RequestParam(value = "performMDHTValidation", required = false, defaultValue = "true") boolean performMDHTValidation,
 			@RequestParam(value = "performVocabularyValidation", required = false, defaultValue = "true") boolean performVocabularyValidation,
 			@RequestParam(value = "performContentValidation", required = false, defaultValue = "false") boolean performContentValidation,
-			@RequestParam(value = "defaultR21ValidationObjective", required = false, defaultValue = ValidationObjectives.Receiver.B1_TOC_INP_170_315) String defaultR21ValidationObjective,
+			@RequestParam(value = "defaultR21ValidationObjective", required = false, defaultValue = CCDATypes.NON_SPECIFIC_CCDAR2) String defaultR21ValidationObjective,
 			@RequestParam(value = "defaultR11ValidationObjective", required = false, defaultValue = CCDATypes.NON_SPECIFIC_CCDAR2) String defaultR11ValidationObjective
 			) {
 		
@@ -139,7 +139,7 @@ public class ReferenceCCDAValidationController {
 			@RequestParam(value = "performMDHTValidation", required = false, defaultValue = "true") boolean performMDHTValidation,
 			@RequestParam(value = "performVocabularyValidation", required = false, defaultValue = "true") boolean performVocabularyValidation,
 			@RequestParam(value = "performContentValidation", required = false, defaultValue = "false") boolean performContentValidation,
-			@RequestParam(value = "defaultR21ValidationObjective", required = false, defaultValue = ValidationObjectives.Receiver.B1_TOC_INP_170_315) String defaultR21ValidationObjective,
+			@RequestParam(value = "defaultR21ValidationObjective", required = false, defaultValue = CCDATypes.NON_SPECIFIC_CCDAR2) String defaultR21ValidationObjective,
 			@RequestParam(value = "defaultR11ValidationObjective", required = false, defaultValue = CCDATypes.NON_SPECIFIC_CCDAR2) String defaultR11ValidationObjective
 			) {				
 		return referenceCcdaValidationService.validateCCDA(validationObjective, referenceFileName, ccdaFile,severityLevel.toUpperCase(), 

@@ -227,28 +227,34 @@ public class ReferenceCCDAValidationService {
 	private String defaultValidationObjectiveIfEmpty(String validationObjective, String defaultR21ValidationObjective,
 			String defaultR11ValidationObjective, String ccdaFileContents)
 			throws IOException, SAXException, ParserConfigurationException, XPathExpressionException {
-		InputStream inputStream = IOUtils.toInputStream(ccdaFileContents, "UTF-8");
-		
-		Document doc = getDocumentBuilder().parse(inputStream);
-		
-		XPath xpath = getNewXpath(doc);			
-		boolean isR11Doc = isDocumentR11CCDA(doc, xpath);			
-		
+
 		if(StringUtils.isEmpty(validationObjective) && (!StringUtils.isEmpty(defaultR11ValidationObjective) 
 				|| !StringUtils.isEmpty(defaultR21ValidationObjective))) {
 			
-			validationObjective = isR11Doc ? defaultR11ValidationObjective : defaultR21ValidationObjective;
+			if(defaultR11ValidationObjective.equalsIgnoreCase(defaultR21ValidationObjective)) {
+				validationObjective = defaultR21ValidationObjective;
+			} else {
 			
-			logger.debug("defaultR21ValidationObjective = " + defaultR21ValidationObjective);
-			logger.debug("defaultR11ValidationObjective = " + defaultR11ValidationObjective);
-						
-			StringBuilder msg = new StringBuilder("The validationObjective given is ");
-			msg.append(validationObjective == null ? "null" : "empty");
-			msg.append(", isR11Doc = ");
-			msg.append(isR11Doc);
-			msg.append(", setting validationObjective to ");
-			msg.append(validationObjective);
-			logger.warn(msg.toString());
+				InputStream inputStream = IOUtils.toInputStream(ccdaFileContents, "UTF-8");
+				
+				Document doc = getDocumentBuilder().parse(inputStream);
+				
+				XPath xpath = getNewXpath(doc);			
+				boolean isR11Doc = isDocumentR11CCDA(doc, xpath);			
+							
+				validationObjective = isR11Doc ? defaultR11ValidationObjective : defaultR21ValidationObjective;
+				
+				logger.debug("defaultR21ValidationObjective = " + defaultR21ValidationObjective);
+				logger.debug("defaultR11ValidationObjective = " + defaultR11ValidationObjective);
+							
+				StringBuilder msg = new StringBuilder("The validationObjective given is ");
+				msg.append(validationObjective == null ? "null" : "empty");
+				msg.append(", isR11Doc = ");
+				msg.append(isR11Doc);
+				msg.append(", setting validationObjective to ");
+				msg.append(validationObjective);
+				logger.warn(msg.toString());
+			}
 		}
 		
 		logger.debug("validationObjective = " + validationObjective);
