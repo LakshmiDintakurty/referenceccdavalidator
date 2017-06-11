@@ -373,6 +373,7 @@ public class ReferenceCCDAValidationService {
 			 */
 
 		} catch (Exception e) {
+			logger.error("runValidators failed: " + e);
 			throw new RuntimeException("Error getting CCDA contents from provided file", e);
 		}
 		return validateCCDA(validationObjective, referenceFileName, multipartFile, severityLevel, 
@@ -474,7 +475,7 @@ public class ReferenceCCDAValidationService {
 	
 	private List<RefCCDAValidationResult> runValidators(String validationObjective, String referenceFileName,
 			MultipartFile ccdaFile, String severityLevel,boolean performMDHTValidation, boolean performVocabularyValidation,
-			boolean performContentValidation, StringBuilder out, String defaultR21ValidationObjective, String defaultR11ValidationObjective) throws SAXException {
+			boolean performContentValidation, StringBuilder out, String defaultR21ValidationObjective, String defaultR11ValidationObjective) throws SAXException, Exception {
 		
 		List<RefCCDAValidationResult> validatorResults = new ArrayList<>();
 		List<RefCCDAValidationResult> filterResults = new ArrayList<RefCCDAValidationResult>();
@@ -565,7 +566,8 @@ public class ReferenceCCDAValidationService {
 			stopTime = System.currentTimeMillis();
 			out.append(" Filter:" + (stopTime - startTime) + " ms");
 			
-			} catch (Exception e) {
+			} catch (IOException e) {
+			logger.error("runValidators failed: " + e);
 			throw new RuntimeException("Error getting CCDA contents from provided file", e);
 		}
 		
