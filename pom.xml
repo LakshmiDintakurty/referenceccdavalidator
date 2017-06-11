@@ -19,7 +19,7 @@
     <repositories>
          <repository>
             <snapshots>
-                <enabled>false</enabled>
+                <enabled>true</enabled>
             </snapshots>
             <id>mdht-libs</id>
             <name>libs-release</name>
@@ -27,7 +27,7 @@
         </repository>
         <repository>
             <snapshots>
-                <enabled>false</enabled>
+                <enabled>true</enabled>
             </snapshots>        
             <id>mdht-plugins</id>
             <name>plugins-release</name>
