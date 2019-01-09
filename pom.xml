@@ -23,7 +23,8 @@
             </snapshots>
             <id>mdht-libs</id>
             <name>libs-release</name>
-            <url>http://devsoap.sitenv.org:8081/artifactory/libs-release</url>
+            <!-- <url>http://devsoap.sitenv.org:8081/artifactory/libs-release</url> -->
+            <url>http://artifactory-corp.cerner.com/artifactory/ais-repo/org</url>
         </repository>
         <repository>
             <snapshots>
@@ -31,7 +32,8 @@
             </snapshots>        
             <id>mdht-plugins</id>
             <name>plugins-release</name>
-            <url>http://devsoap.sitenv.org:8081/artifactory/plugins-release-local</url>
+            <!-- <url>http://devsoap.sitenv.org:8081/artifactory/plugins-release-local</url> -->
+            <url>http://artifactory-corp.cerner.com/artifactory/ais-repo/org</url>
         </repository> 
     </repositories>
 
@@ -53,22 +55,22 @@
 		    <groupId>org.eclipse.mdht</groupId>
 		    <artifactId>org.eclipse.mdht.emf.runtime</artifactId>
 		    <version>3.0.0.201703230502</version>
-		</dependency>
+		</dependency>		
         <dependency>
             <groupId>org.eclipse.mdht</groupId>
             <artifactId>org.eclipse.mdht.uml.cda</artifactId>
             <version>3.0.0.201703230502</version>
-        </dependency>
+        </dependency>		
 		<dependency>
 		    <groupId>org.eclipse.mdht</groupId>
 		    <artifactId>org.eclipse.mdht.uml.hl7.datatypes</artifactId>
 		    <version>3.0.0.201703230502</version>
-		</dependency>
+		</dependency>		
 		<dependency>
 		    <groupId>org.eclipse.mdht</groupId>
 		    <artifactId>org.eclipse.mdht.uml.hl7.rim</artifactId>
 		    <version>3.0.0.201703230502</version>
-		</dependency>
+		</dependency>		
 		<dependency>
 		    <groupId>org.eclipse.mdht</groupId>
 		    <artifactId>org.eclipse.mdht.uml.hl7.vocab</artifactId>
