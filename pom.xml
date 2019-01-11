@@ -24,7 +24,9 @@
             <id>mdht-libs</id>
             <name>libs-release</name>
             <!-- <url>http://devsoap.sitenv.org:8081/artifactory/libs-release</url> -->
-            <url>http://artifactory-corp.cerner.com/artifactory/ais-repo/org</url>
+            <url>http://artifactory-corp.cerner.com/artifactory/ais-repo</url> 
+		
+			
         </repository>
         <repository>
             <snapshots>
@@ -33,7 +35,7 @@
             <id>mdht-plugins</id>
             <name>plugins-release</name>
             <!-- <url>http://devsoap.sitenv.org:8081/artifactory/plugins-release-local</url> -->
-            <url>http://artifactory-corp.cerner.com/artifactory/ais-repo/org</url>
+            <url>http://artifactory-corp.cerner.com/artifactory/ais-repo</url>			
         </repository> 
     </repositories>
 
