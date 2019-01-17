@@ -34,6 +34,7 @@ import org.sitenv.referenceccda.validators.schema.CCDATypes;
 import org.sitenv.referenceccda.validators.schema.ReferenceCCDAValidator;
 import org.sitenv.referenceccda.validators.schema.ValidationObjectives;
 import org.sitenv.referenceccda.validators.vocabulary.VocabularyCCDAValidator;
+import org.sitenv.vocabularies.validation.services.VocabularyValidationService;
 import org.sitenv.vocabularies.validation.utils.CCDADocumentNamespaces;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockMultipartFile;
@@ -124,33 +125,6 @@ public class ReferenceCCDAValidationService {
 		resultsDto.setResultsMetaData(resultsMetaData);
 		resultsDto.setCcdaValidationResults(validatorResults);
 		return resultsDto;
-	}
-
-	protected XPath getNewXpath(final Document doc) {
-		XPath xpath = xPathFactory.newXPath();
-		xpath.setNamespaceContext(new NamespaceContext() {
-			@Override
-			public String getNamespaceURI(String prefix) {
-				String nameSpace;
-				if (CCDADocumentNamespaces.sdtc.name().equals(prefix)) {
-					nameSpace = CCDADocumentNamespaces.sdtc.getNamespace();
-				} else {
-					nameSpace = CCDADocumentNamespaces.defaultNameSpaceForCcda.getNamespace();
-				}
-				return nameSpace;
-			}
-
-			@Override
-			public String getPrefix(String namespaceURI) {
-				return null;
-			}
-
-			@Override
-			public Iterator getPrefixes(String namespaceURI) {
-				return null;
-			}
-		});
-		return xpath;
 	}	
 	
 	private static void processValidateCCDAException(ValidationResultsMetaData resultsMetaData, 
@@ -239,7 +213,7 @@ public class ReferenceCCDAValidationService {
 				
 				Document doc = getDocumentBuilder().parse(inputStream);
 				
-				XPath xpath = getNewXpath(doc);			
+				XPath xpath = VocabularyValidationService.getNewXpath(doc, xPathFactory);			
 				boolean isR11Doc = isDocumentR11CCDA(doc, xpath);			
 							
 				validationObjective = isR11Doc ? defaultR11ValidationObjective : defaultR21ValidationObjective;
