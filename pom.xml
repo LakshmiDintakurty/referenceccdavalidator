@@ -15,6 +15,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <mdht.plugins.version>3.0.0.201805310501</mdht.plugins.version>
+        <consentdirective.version>1.0.0.20170920</consentdirective.version>
+        <ds4pcontent.version>3.0.0.20170920</ds4pcontent.version>
     </properties>
     <repositories>
     	<!--  
@@ -52,16 +54,24 @@
  		<dependency>
 		    <groupId>org.openhealthtools.mdht.cda</groupId>
 		    <artifactId>org.openhealthtools.mdht.uml.cda.consol2</artifactId>
-		    <!-- <version>2.6.3.20170323</version> -->
 		    <version>3.0.9.20180622</version>
 		</dependency> 
 		<dependency>
 		    <groupId>org.openhealthtools.mdht.cda</groupId>
 		    <artifactId>org.openhealthtools.mdht.uml.cda.mu2consol</artifactId>
-		   <!-- <version>2.6.3.20170323</version> -->
 		   <version>3.0.8.20180531</version>	
 		</dependency>
 		
+		<dependency>
+		    <groupId>org.hl7.cbcc.privacy</groupId>
+		    <artifactId>org.hl7.cbcc.privacy.consentdirective</artifactId>
+		    <version>${consentdirective.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.hl7.security.ds4p</groupId>
+		    <artifactId>org.hl7.security.ds4p.contentprofile</artifactId>
+		    <version>${ds4pcontent.version}</version>
+		</dependency>
 		<!-- 1st party MDHT - PLUGINS from http://git.eclipse.org/c/mdht/org.eclipse.mdht.git -->
 		<dependency>
 		    <groupId>org.eclipse.mdht</groupId> 
