@@ -44,8 +44,7 @@
             </snapshots>
             <id>mdht-libs</id>
             <name>libs-release</name>
-			<url>http://artifactory-corp.cerner.com/artifactory/ais-repo</url>
-			<!-- <url>https://artifactory-corp.cerner.com/artifactory/ais-repo</url> -->
+			<url>https://artifactory-corp.cerner.com/artifactory/ais-repo</url>
         </repository>
     </repositories>
     <dependencies>
